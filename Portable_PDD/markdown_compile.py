@@ -295,12 +295,12 @@ class LatexMarkdownCompiler:
         os.mkdir(self.name)
 
         #Write latex file to new directory.
-        with open(self.name+"\\"+self.name+".tex", "w") as fle:
+        latex_path = self.name+"\\"+self.name+".tex"
+        with open(latex_path, "w") as fle:
             fle.write(tex_contents)
 
-        #Compile LaTeX document.
-        pass
-        
+        #Compile the script.  System call is bat script, path of file, path of folder that file exists in.
+        os.system(self.bat_script + " " + latex_path + " "+self.name)
 
 
 
