@@ -1,2 +1,2 @@
 REM Calls into MikTex command line tool.
-pdflatex -output-directory=%2 %1
+pdflatex -output-directory=%1 %2

@@ -15,9 +15,11 @@ import os
 import sys
 import re
 import shutil
+import argparse
 
 # Possible regex for removing comments.
 TEMPLATE_FILE = "spex_template.tex"
+COMPILER = ".\\Compile_Scripts\\MikTexCompiler.bat"
 
 #Template tags that exist inside the SPEX document.
 TITLE = "TITLETAG"
@@ -38,10 +40,11 @@ class LatexMarkdownCompiler:
     # Initialization requires path of markdown file, bath of script to 
     # to execute for compilation, as well as the name of the document.
     #---------------------------------------------------------------------
-    def __init__(self, path_of_md_file, path_of_bat_script, document_name):
+    def __init__(self, path_of_md_file, path_of_bat_script, document_name, verbose=False):
         self.name = document_name
         self.md_path = path_of_md_file
         self.bat_script = path_of_bat_script
+        self.verbose = verbose
 
     #---------------------------------------------------------------------
     # Filters out comments from the markdown document.
@@ -49,7 +52,7 @@ class LatexMarkdownCompiler:
     # or are a single line in the format of <!--- SOME TEXT --->.
     # Multiline comments must have starting and ending tags to themselves.
     #---------------------------------------------------------------------
-    def _filter_out_comments(self, debug = False):
+    def _filter_out_comments(self):
         new_str = ""
         start_comment = False
         comment_balance = 0
@@ -177,12 +180,12 @@ class LatexMarkdownCompiler:
                         print("***** Error: Malformed sections/subsections")
                         print(line)
                         sys.exit(1)
-                    
-        #Print out wonderful information.
-        print(title)
-        print(authors)
-        print(emails)
-        print(section_dict)
+        if self.verbose:      
+            #Print out wonderful information.
+            print(title)
+            print(authors)
+            print(emails)
+            print(section_dict)
 
         #Items that populate the spex_template.tex file
         return title, authors, emails, section_dict
@@ -202,8 +205,8 @@ class LatexMarkdownCompiler:
         if "ABSTRACT" not in sections:
             print("***** Error: No abstract in markdown.  Make a section titled #ABSTRACT")
             sys.exit(1)
-
-        print(sections)
+        if self.verbose:
+            print(sections)
 
         #Storage for latex formatted strings for abstract and sections.
         abstract_str = ""
@@ -238,11 +241,11 @@ class LatexMarkdownCompiler:
                         sections_str += txt
                         sections_str += (r"\\") + ("\n")
                 
-
-        #Prints out latex formatted strings.
-        print(abstract_str)
-        print("")
-        print(sections_str)
+        if self.verbose:
+            #Prints out latex formatted strings.
+            print(abstract_str)
+            print("")
+            print(sections_str)
 
         return abstract_str, sections_str
         
@@ -262,7 +265,7 @@ class LatexMarkdownCompiler:
     #   - TODO: Image syntax of some sort.
     # For now users can default back to LaTeX tho and code has been provided in test.md for it.
     #---------------------------------------------------------------------
-    def compile(self, path_of_output=None):
+    def convert(self):
         #Get information needed for document
         title, authors, emails, sections = self._parse()
         
@@ -282,9 +285,10 @@ class LatexMarkdownCompiler:
         tex_contents = tex_contents.replace(ABSTRACT, abstract_latex)
         tex_contents = tex_contents.replace(SECTION_START, sections_latex)
 
-        #Output complete LaTeX document.
-        print("")
-        print(tex_contents)
+        if self.verbose:
+            #Output complete LaTeX document.
+            print("")
+            print(tex_contents)
         
  
         #Get rid of directory so we can regenerate the new .tex file.
@@ -295,43 +299,66 @@ class LatexMarkdownCompiler:
         os.mkdir(self.name)
 
         #Write latex file to new directory.
-        latex_path = self.name+"\\"+self.name+".tex"
-        with open(latex_path, "w") as fle:
+        tex_path = self.name+"\\"+self.name+".tex"
+        with open(tex_path, "w") as fle:
             fle.write(tex_contents)
+        
+        return tex_path
 
-        #Compile the script.  System call is bat script, path of file, path of folder that file exists in.
-        os.system(self.bat_script + " " + latex_path + " "+self.name)
-
-
+    def compile(self, tex_path):
+        #Compile the script.  System call is bat script, path of file, path of
+        #folder that file exists in.
+        os.system("%(compiler)s %(tex_dir)s %(tex_file)s" % {
+            "compiler": self.bat_script,
+            "tex_dir": self.name,
+            "tex_file": ".\\" + tex_path
+        })
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="converts basic markdown to TeX and PDF")
+    parser.add_argument(
+        "input",
+        help="Path to source Markdown file to be converted."
+    )
+    parser.add_argument(
+        "-c", "--compiler",
+        help="Path to TeX->PDF compiler script. (Default: %s)" % COMPILER,
+        required=False,
+        default=COMPILER
+    )
+    parser.add_argument(
+        "-o", "--output",
+        help="File name of output TeX and PDF.",
+        required=False
+    )
+    parser.add_argument(
+        "-t", "--template",
+        help="TeX template to use. (Default: %s)" % TEMPLATE_FILE,
+        required=False,
+        default=TEMPLATE_FILE
+    )
+    parser.add_argument(
+        "--tex_only",
+        help="Do not build the PDF after converting markdown->TeX.",
+        required=False
+    )
+    parser.add_argument(
+        "-v", "--verbose",
+        help="Display additional information to the console.",
+        action="store",
+        required=False
+    )
+    args = parser.parse_args()
 
-    #Incorrect formatting of script commands
-    if len(sys.argv) != 4:
-        print("***** ERROR: Incorrect usage.\nUsage: python markdown_compile.py %DOCUMENT_PATH% %COMPILE_SCRIPT% %FINAL_DOC_NAME%")
-        sys.exit(1)
-
-    #Try and see if markdown file exists.
-    try:
-        path_of_markdown = os.path.realpath(sys.argv[1])
-        if not os.path.exists(path_of_markdown):
-            print ("***** ERROR: Problem finding path of markdown file.  It does not exists."+ sys.argv[1] +"\n\n")
-            sys.exit(1)
-    except Exception as err:
-        print (("***** ERROR: Problem finding path of markdown file "+ sys.argv[1] +"\n\n"), sys.exc_info()[0])
-        sys.exit(1)
-
-    #No compile script
-    if sys.argv[2] == "":
-        print("***** ERROR: Please specify a compile script that is located in the folder of the main .bat file.")
-        sys.exit(1)
-
-    #Check if document name was provided and kick off the compilation.
-    if sys.argv[3] == "":
-        print("----- WARNING: The name of the final document was not defined.  Defaulting to tex.pdf as the name.")
-        latex = LatexMarkdownCompiler(path_of_markdown, sys.argv[2], "tex.pdf")
-        latex.compile()
-    else:
-        latex = LatexMarkdownCompiler(path_of_markdown, sys.argv[2], sys.argv[3])
-        latex.compile()
+    if not args.output:
+        document_name = os.path.splitext(args.input)[0]
+    else: 
+        document_name = args.output
+    
+    latex = LatexMarkdownCompiler(
+        args.input, args.compiler, document_name, verbose=args.verbose)
+    tex_path = latex.convert()
+    if not args.tex_only:
+        latex.compile(tex_path)
