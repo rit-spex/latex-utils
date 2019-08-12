@@ -1,6 +1,5 @@
 # RIT-SPEX/latex-utils
-This repository contains scripts for installing LaTeX configurations and to
-compile TeX into beautiful documents.
+This repository contains scripts for turning TeX into beautiful documents.
 
 # Install a LaTeX compiler on your machine
 Use the following instructions to install a LaTeX compiler on your local machine.
@@ -24,17 +23,19 @@ is small and grows as you use more packages.
 |     |     |
 | --- | --- |
 | **Windows** | `./install_scripts/install_miktex_win64.bat` |
-| **Linux** | `./install_scripts/install_miktex_linux.sh` |
+| **Linux** | `apt-get install miktex` |
 
-## MacTeX
-MacTeX is a distribution of [TeX Live](https://www.tug.org/texlive/acquire-netinstall.html)
-that is modified specifically for MacOS. TeX Live (and therefore MacTeX) do not
+## TeX Live
+TeX Live is the "standard" TeX distribution. MacTeX is a distribution of TeX Live
+that is modified specifically for MacOS. TeX Live (and MacTeX) do not
 dynamically download packages. If you need to use a package that is not installed,
 you must install it using the included GUI package manager.
 
 |     |     |
 | --- | --- |
-| **Mac** | `./install_scripts/install_mactex.sh` |
+| **Windows** | `` |
+| **Mac** | `brew cask install mactex` |
+| **Linux** | `apt-get install texlive` |
 
 # Use a Docker container instead
 Rather than installing and managing a TeX distribution on your local machine,
