@@ -40,9 +40,10 @@ class LatexMarkdownCompiler:
     # Initialization requires path of markdown file, bath of script to 
     # to execute for compilation, as well as the name of the document.
     #---------------------------------------------------------------------
-    def __init__(self, path_of_md_file, path_of_bat_script, document_name, verbose=False):
+    def __init__(self, path_of_md_file, path_of_bat_script, document_name, tex_template_path, verbose=False):
         self.name = document_name
         self.md_path = path_of_md_file
+        self.tex_template_path = tex_template_path
         self.bat_script = path_of_bat_script
         self.verbose = verbose
 
@@ -274,7 +275,7 @@ class LatexMarkdownCompiler:
         
         #Read template latex file.
         tex_contents = ""
-        with open(TEMPLATE_FILE, "r") as fle:
+        with open(self.tex_template_path, "r") as fle:
             tex_contents = fle.read()
         
         #Replace template tags with relevant data.
@@ -358,7 +359,7 @@ if __name__ == "__main__":
         document_name = args.output
     
     latex = LatexMarkdownCompiler(
-        args.input, args.compiler, document_name, verbose=args.verbose)
+        args.input, args.compiler, document_name, args.template, verbose=args.verbose)
     tex_path = latex.convert()
     if not args.tex_only:
         latex.compile(tex_path)
