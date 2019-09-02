@@ -5,8 +5,7 @@ Description: This is a python file that converts basic markdown to a latex file 
 TODO: Integrate some additional features.  See LatexMarkdownCompiler.compile() function.
 
 The logic is not anything special and is just a state machine handling basic conditions.
-
-SPEX Members are free to improve upon it as they see fit.
+SPEX Members are free to improve upon it as they see fit with the pull request system on Github.
 """
 
 import os
