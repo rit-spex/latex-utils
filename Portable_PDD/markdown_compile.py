@@ -3,7 +3,6 @@ Author: Evan Putnam
 Description: This is a python file that converts basic markdown to a latex file based on a template.
 
 TODO: Integrate some additional features.  See LatexMarkdownCompiler.compile() function.
-TODO: Add additional logging beyond print statements.
 
 The logic is not anything special and is just a state machine handling basic conditions.
 
@@ -17,9 +16,12 @@ import shutil
 import logging
 import argparse
 
-# Possible regex for removing comments.
-TEMPLATE_FILE = "spex_template.tex"
+#Possible regex for removing comments.
+TEMPLATE_FILE = "Templates\\PDD_Template.tex"
 COMPILER = ".\\Compile_Scripts\\MikTexCompiler.bat"
+
+#Name of log file
+LOG_FILE_NAME = "markdown_compile.log"
 
 #Template tags that exist inside the SPEX document.
 ABSTRACT = "ABSTRACT_TAG"
@@ -84,8 +86,10 @@ class LatexMarkdownCompiler:
 
         #Comments are malformed so this is an error.
         if start_comment == True or comment_balance != 0:
-            print("***** ERROR: Malformed comments.  Can not parse the document. Please fix you comments to have a starting and ending tag." )
-            print("In addition do NOT have <!--- or ---> anywhere in your markdown document that you do not expect a comment.")
+            error_message = "Malformed comments.  Can not parse the document. Please fix you comments to have a starting and ending tag.\n" 
+            error_message += "In addition do NOT have <!--- or ---> anywhere in your markdown document that you do not expect a comment."
+            print("***** ERROR: " + error_message)
+            logging.error(error_message)
             sys.exit(1)
 
         #Return markdown document text without markdown <!--- ---> comments
@@ -142,6 +146,7 @@ class LatexMarkdownCompiler:
                     if current_section == None:
                         print("***** Error: Subsection before section")
                         print(line)
+                        logging.error("Subsection before section: "+line)
                         sys.exit(1)
                     #Else handle section
                     else:
@@ -165,6 +170,7 @@ class LatexMarkdownCompiler:
                     elif line.strip() != "":
                         print("***** Error: Malformed sections/subsections")
                         print(line)
+                        logging.error("Malformed sections/subsections")
                         sys.exit(1)
         if self.verbose:      
             #Print out wonderful information.
@@ -182,12 +188,15 @@ class LatexMarkdownCompiler:
         #If no sections are detected then errors out.
         if len(sections) == 0:
             print("***** Error: No sections detected in your markdown file.")
+            logging.error("No sections detected in your markdown file.")
             sys.exit(1)
         
         #If no abstract it errors out.  Shame on you...
         if "ABSTRACT" not in sections:
             print("----- Warning: No abstract in markdown.  Most documents should have an abstract.")
+            logging.warning("No abstract in markdown.  Most documents should have an abstract.")
         if self.verbose:
+            logging.debug(str(sections))
             print(sections)
 
         #Storage for latex formatted strings for abstract and sections.
@@ -229,6 +238,8 @@ class LatexMarkdownCompiler:
             print(abstract_str)
             print("")
             print(sections_str)
+            logging.debug(str(abstract_str))
+            logging.debug(str(sections_str))
 
         return abstract_str, sections_str
         
@@ -245,7 +256,7 @@ class LatexMarkdownCompiler:
     # there is opportunity to post process more if need be.  The following features would be good.
     #   - TODO: Include bold and italics
     #   - TODO: Include basic bullited lists.
-    # For now users can default back to LaTeX tho and code has been provided in test.md for it.
+    # For now users can default back to LaTeX though and code has been provided in test.md for it.
     #---------------------------------------------------------------------
     def convert(self):
         #Get information needed for document
@@ -273,6 +284,7 @@ class LatexMarkdownCompiler:
             #Output complete LaTeX document.
             print("")
             print(tex_contents)
+            logging.debug(tex_contents)
         
  
         #Get rid of directory so we can regenerate the new .tex file.
@@ -302,6 +314,11 @@ class LatexMarkdownCompiler:
 
 
 if __name__ == "__main__":
+    #Initialize logging.
+    if os.path.exists(LOG_FILE_NAME):
+        os.remove(LOG_FILE_NAME)
+    logging.basicConfig(filename=LOG_FILE_NAME)
+    #Create the parser.
     parser = argparse.ArgumentParser(
         description="converts basic markdown to TeX and PDF")
     parser.add_argument(

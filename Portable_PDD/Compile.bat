@@ -1,4 +1,9 @@
 @echo OFF
+
+REM This is a .bat file that can be used to compile a markdown file using a latex template file.
+REM The latex template file has variables/sections that are populated from the markdown file.
+REM This is a Windows file and there should be a corresponding linux/macos compile script.
+
 REM This is where you specify the path of your document.
 set DOCUMENT_PATH="Templates\\markdown_template.md"
 
