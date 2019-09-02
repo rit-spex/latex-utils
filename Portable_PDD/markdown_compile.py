@@ -1,8 +1,7 @@
 """
 Author: Evan Putnam
-Description: This is a python file that converts basic markdown to the SPEX PDD.
+Description: This is a python file that converts basic markdown to a latex file based on a template.
 
-TODO: Have the option to easily define additional meta-data tags.
 TODO: Integrate some additional features.  See LatexMarkdownCompiler.compile() function.
 TODO: Add additional logging beyond print statements.
 
@@ -15,6 +14,7 @@ import os
 import sys
 import re
 import shutil
+import logging
 import argparse
 
 # Possible regex for removing comments.
@@ -22,11 +22,8 @@ TEMPLATE_FILE = "spex_template.tex"
 COMPILER = ".\\Compile_Scripts\\MikTexCompiler.bat"
 
 #Template tags that exist inside the SPEX document.
-TITLE = "TITLETAG"
-STUDENT_NAMES = "STUDENTTAG"
-STUDENT_EMAILS = "EMAILTAG"
-ABSTRACT = "ABSTRACTTAG"
-SECTION_START = "SECTIONTAG"
+ABSTRACT = "ABSTRACT_TAG"
+SECTION_START = "SECTION_TAG"
 
 
 
@@ -106,15 +103,12 @@ class LatexMarkdownCompiler:
         #Start metadata search bool
         start_metadata = False
 
-        #Items to find from metadata in test.md
-        title = None
-        authors = None
-        emails = None
-
         #Section storage
         current_section = None
         current_sub_section = None
         section_dict = {}
+
+        tag_key_values = {}
 
         for line in markdown_file_str:
             #Start looking for metadata
@@ -128,24 +122,15 @@ class LatexMarkdownCompiler:
             #If we are looking for metadata
             elif start_metadata:
                 #Search for specific tags.
-                if "title:" in line:
-                    temp = "title:"
-                    title = line[line.find(temp) + len(temp):].strip()
-                elif "authors:" in line:
-                    temp = "authors:"
-                    authors = line[line.find(temp) + len(temp):].strip()
-                elif "emails:" in line:
-                    temp = "emails:"
-                    emails = line[line.find(temp) + len(temp):].strip()
+                line_parts = line.split(":")
+                tag_key = line_parts[0].strip()
+                tag_value = ":".join(line_parts[1:]).strip()
+                tag_key_values[tag_key] = tag_value
+
             #Look at subsections
             else:
-                #If we can't identify metadata then error
-                if line.startswith("#") and title == None:
-                    print("***** ERROR: Malformed metadata.  Please include a title, authors, and emails" )
-                    print(line)
-                    sys.exit(1)
                 #If start of section
-                elif line.startswith("#") and not line.startswith("##"):
+                if line.startswith("#") and not line.startswith("##"):
                     current_sub_section = None
                     temp = "#"
                     current_section = line[line.find(temp) + len(temp):].strip()
@@ -183,13 +168,10 @@ class LatexMarkdownCompiler:
                         sys.exit(1)
         if self.verbose:      
             #Print out wonderful information.
-            print(title)
-            print(authors)
-            print(emails)
             print(section_dict)
 
         #Items that populate the spex_template.tex file
-        return title, authors, emails, section_dict
+        return tag_key_values, section_dict
 
     #---------------------------------------------------------------------
     # Converts the markdown items to latex format and puts it into
@@ -204,8 +186,7 @@ class LatexMarkdownCompiler:
         
         #If no abstract it errors out.  Shame on you...
         if "ABSTRACT" not in sections:
-            print("***** Error: No abstract in markdown.  Make a section titled #ABSTRACT")
-            sys.exit(1)
+            print("----- Warning: No abstract in markdown.  Most documents should have an abstract.")
         if self.verbose:
             print(sections)
 
@@ -214,11 +195,12 @@ class LatexMarkdownCompiler:
         sections_str = ""
 
         #Get abstract data
-        for txt in sections["ABSTRACT"]["text"].split("\n"):
-            if txt.strip() == "":
-                continue
-            abstract_str += txt
-            abstract_str += (r"\\") + ("\n")
+        if "ABSTRACT" in sections:
+            for txt in sections["ABSTRACT"]["text"].split("\n"):
+                if txt.strip() == "":
+                    continue
+                abstract_str += txt
+                abstract_str += (r"\\") + ("\n")
 
         #Get section data
         for section in sections:
@@ -263,12 +245,11 @@ class LatexMarkdownCompiler:
     # there is opportunity to post process more if need be.  The following features would be good.
     #   - TODO: Include bold and italics
     #   - TODO: Include basic bullited lists.
-    #   - TODO: Image syntax of some sort.
     # For now users can default back to LaTeX tho and code has been provided in test.md for it.
     #---------------------------------------------------------------------
     def convert(self):
         #Get information needed for document
-        title, authors, emails, sections = self._parse()
+        tag_key_values, sections = self._parse()
         
         #Get latex formatted abstract and sections/subsections
         abstract_latex, sections_latex = self._latex_string(sections)
@@ -279,12 +260,14 @@ class LatexMarkdownCompiler:
             tex_contents = fle.read()
         
         #Replace template tags with relevant data.
-        tex_contents = tex_contents.replace(TITLE, title)
-        tex_contents = tex_contents.replace(TITLE, title)
-        tex_contents = tex_contents.replace(STUDENT_NAMES, authors)
-        tex_contents = tex_contents.replace(STUDENT_EMAILS, emails)
-        tex_contents = tex_contents.replace(ABSTRACT, abstract_latex)
+        if abstract_latex != "":
+            tex_contents = tex_contents.replace(ABSTRACT, abstract_latex)
         tex_contents = tex_contents.replace(SECTION_START, sections_latex)
+
+        for key in tag_key_values:
+            times_to_replace = tex_contents.count(key)
+            for i in range(0, times_to_replace):
+                tex_contents = tex_contents.replace(key, tag_key_values[key])
 
         if self.verbose:
             #Output complete LaTeX document.
@@ -308,12 +291,14 @@ class LatexMarkdownCompiler:
 
     def compile(self, tex_path):
         #Compile the script.  System call is bat script, path of file, path of
-        #folder that file exists in.
-        os.system("%(compiler)s %(tex_dir)s %(tex_file)s" % {
-            "compiler": self.bat_script,
-            "tex_dir": self.name,
-            "tex_file": ".\\" + tex_path
-        })
+        #folder that file exists in.  It compiles twice to fix fairly common issues with broken references in .aux file.
+        for i in range(0, 2):
+            os.system("%(compiler)s %(tex_dir)s %(tex_file)s" % {
+                "compiler": self.bat_script,
+                "tex_dir": self.name,
+                "tex_file": ".\\" + tex_path
+            })
+        
 
 
 if __name__ == "__main__":

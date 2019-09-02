@@ -1,7 +1,8 @@
 ---
-title: 50\$ Satellite PDD
-authors: Evan Putnam, Another Student 
-emails: emp9173@rit.edu, someOtherEmail@spex.com
+TITLE_TAG: 50\$ Satellite PDD
+AUTHORS_TAG: Evan Putnam, Another Student 
+EMAIL_TAG: emp9173@rit.edu, someOtherEmail@spex.com
+TEMP_TAG: Hello World
 ---
 <!--- 
     This is a template you can use for markdown with the SPEX PDD LaTeX documents.
@@ -29,12 +30,13 @@ emails: emp9173@rit.edu, someOtherEmail@spex.com
 
 
 <!--- 
-This is a special section that MUST exist.  
+This is a special section that SHOULD exist.  
 This is text for your abstract and should appear before other sections.
-This CAN NOT have sub-sections.
+This CAN NOT have sub-sections and MUST have the # ABSTRACT syntax.
  --->
-# ABSTRACT 
-This is where you should put your abstract text.  This is very important for detailing how your document is about and every document is required to have one. 
+
+# ABSTRACT
+HERE BE A BIG HONKING ABSTRACT!
 
 # Section 1
 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.s
@@ -63,16 +65,17 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor i
 
 #Section 4
 ## LaTeX Tables
+
 <!--- You can use standard LaTeX syntax if it can be put on a single line. --->
-\autoref{tab:timeline}
+This is a table \autoref{table:somechart}
 
 <!--- 
 This command counts as being on a single line.
 Here is LaTeX code to create a table.
  --->
 \begin{table}
-  \caption{Estimated Timeline}
   \centering
+  \caption{Estimated Timeline}
   \begin{tabularx}{\columnwidth}{@{}cXl@{}} \toprule
     Phase & Task & Duration \\ \midrule
     1 & Review existing \$50SAT designs and materials & 2 weeks or less \\
@@ -85,8 +88,10 @@ Here is LaTeX code to create a table.
     5 & Generate documentation and delivery to SPEX & 1 week  \\
     \bottomrule
   \end{tabularx}
-\label{tab:timeline}
-\end{table}
+\label{table:somechart}
+\end{table} \\
+
+
 
 <!--- 
 This command counts as being on a single line.
