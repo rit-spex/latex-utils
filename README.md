@@ -8,6 +8,12 @@ This repository contains scripts for turning TeX into beautiful documents.
     * [MikTeX](#MikTeX)
     * [TeX Live](#TeX-Live)
     * [Use a Docker container instead](#Use-a-Docker-container-instead)
+* [Compiling Markdown to LaTeX with a Template](#Compiling-Markdown-to-LaTeX-with-a-Template)
+    * [Supported syntax](#Supported-syntax)
+        * [Special tags](#Special-tags)
+        * [Comments](#Comments)
+    * [Run the Markdown-to-TeX compiler](#Run-the-Markdown-to-TeX-compiler)
+
 
 # Prerequisite Software
 These tools assume the user has the following software installed on their
@@ -22,7 +28,7 @@ software.
 **Note:** Documentation for this repository assumes that a Windows user is
 using Windows Powershell. While most of the Linux instructions should work
 within the Windows Subsystem for Linux (WSL) environment on a Windows machine,
-proceed at your own risk. 
+proceed at your own risk.
 
 # Install a LaTeX compiler on your machine
 Use the following instructions to install a LaTeX compiler on your local
@@ -73,3 +79,62 @@ Compile a TeX project with Tectonic with a docker container with
 ```shell
 ./compile_scripts/compile_with_tectonic.sh
 ```
+
+# Compile Markdown to TeX with a Template
+The Python script `Portable_PDD/markdown_compile.py` is used to convert a
+Markdown (`.md`) text file into a LaTeX (`.tex`) file following a given TeX
+template. This script also allows mixed Markdown and TeX formatting in the same
+file.
+
+The Markdown to LaTeX compiler makes writing content faster, easier, and more
+readable by beginning in Markdown and formatting to TeX automatically. A TeX
+template is used to format the resultant `.tex` file, including titles, author
+blocks, section formatting, and so on.
+
+## Supported syntax
+| Syntax | Markdown | LaTeX |
+| ------ | -------- | ----- |
+| Sections | `# my section` | `\section{my section}` |
+| Subsections | `## my subsection` | `\subsection{my subsection}` |
+| Paragraph text | as is | as is |
+| Line breaks | (empty line between paragraphs) | (empty line between paragraphs) |
+| Basic LaTeX syntax | typed as normal text | as is |
+
+### Special tags
+The `.tex` template defines the names of special tags and dictates where they
+are used. At very start of the Markdown file, define tags and their values. The
+values are injected directly into the `.tex` template exactly as they are
+entered here.
+
+```markdown
+---
+TITLE_TAG: 50\$ Satellite PDD
+AUTHORS_TAG: Evan Putnam, Another Student
+EMAIL_TAG: emp9173@rit.edu, someOtherEmail@spex.com
+TEMP_TAG: Hello World
+---
+```
+
+### Comments
+Comments are allowed in the Markdown file, but they are ignored by the compiler
+will not appear in the resultant TeX file.
+
+There can only be one single line comment per line. Nested comments are not
+supported. Multiline comments are only supported if you have a single start and
+end on a separate line.
+
+```
+<!---
+this
+is
+allowed
+--->
+```
+```
+<!--- this
+is
+not --->
+```
+
+## Run the Markdown-to-TeX compiler
+instructions on how to actually run the compiler
