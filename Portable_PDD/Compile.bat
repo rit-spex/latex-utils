@@ -14,7 +14,7 @@ REM This is the where you specify the template of the .tex file.
 set PDD_TEMPLATE="Templates\\PDD_Template.tex"
 
 REM You can specify the type of compiler script.  It expects an input of the path of the .tex document.
-set COMPILE_SCRIPT="Compile_Scripts\\MikTexCompiler.bat"
+set COMPILE_SCRIPT="..\\Compile_Scripts\\MikTexCompiler.bat"
 
 
 REM Make sure you have python 3.X added to your path.
