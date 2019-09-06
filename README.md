@@ -1,7 +1,15 @@
 # RIT-SPEX/latex-utils
 This repository contains scripts for turning TeX into beautiful documents.
 
-## Prerequisite Software
+## Table of Contents
+* [Prerequisite Software](#prerequisite-software)
+* [Install a LaTeX compiler on your machine](#Install-a-LaTeX-compiler-on-your-machine)
+    * [Tectonic](#Tectonic)
+    * [MikTeX](#MikTeX)
+    * [TeX Live](#TeX-Live)
+    * [Use a Docker container instead](#Use-a-Docker-container-instead)
+
+# Prerequisite Software
 These tools assume the user has the following software installed on their
 machine. Installation and usage instructions will not cover using this
 software.
@@ -54,7 +62,7 @@ installed, you must install it using the included GUI package manager.
 | **Mac** | `brew cask install mactex` |
 | **Linux** | `apt-get install texlive` |
 
-# Use a Docker container instead
+## Use a Docker container instead
 Rather than installing and managing a TeX distribution on your local machine,
 you may prefer to send your TeX project to a Docker container for compilation.
 
