@@ -43,7 +43,7 @@
 \makenomenclature{}
 
 % set title. choose something as descriptive and precise as possible. Descriptive > sounding cool. remember this!
-\title{TITLETAG}
+\title{TITLE_TAG}
 
 
 \author{
@@ -56,13 +56,13 @@
   % Read here for a more advanced options to modifying footnotes in the author block:  \url{http://tex.stackexchange.com/questions/826/symbols-instead-of-numbers-as-footnote-markers}
   %   Here, we use the IEEE long-form author block.
   \IEEEauthorblockN{% This block is for author Names.
-   STUDENTTAG%\IEEEauthorrefmark{1},
+   AUTHORS_TAG%\IEEEauthorrefmark{1},
   }
   \IEEEauthorblockA{% This block is for the author Afficliations, aka department and university
     RIT Space Exploration, Rochester Institute of Technology \\ %\\ starts a new line
     Rochester, N.Y. \\
     Email:
-    EMAILTAG%\IEEEauthorrefmark{1}tjt3085@rit.edu,
+    EMAIL_TAG%\IEEEauthorrefmark{1}tjt3085@rit.edu,
   }
   %%   Below, we use the short-form author block and basically hack it to suit our needs.
   % Philip~Linden$^{*\dagger}$%
@@ -86,17 +86,17 @@
   %%   There are ways to make LaTeX do this for you, but it is more advanced and not entirely necessary, especially for short author lists. Not worth the hassle, in my opinion.
 }
 % page header for pages other than cover page
-\markboth{TITLETAG}%
+\markboth{TITLE_TAG}%
 {Tarazevits \MakeLowercase{\textit{et al.}}: RIT Space Exploration}
 
 % Initial setup is over, start building the document itself
 \begin{document}
-\maketitle%
+\maketitle
 % correct bad hyphenation here, separated by spaces
 \hyphenation{explor-ation}
 
 \begin{abstract}
-ABSTRACTTAG
+ABSTRACT_TAG
 
       % The abstract is a brief summary of the design document. Typically it includes the purpose of the design document, key goals or objectives, and justifications.
       % Be sure not to confuse the abstract with the introduction.
@@ -128,7 +128,7 @@ ABSTRACTTAG
 \nomenclature{CSLI}{CubeSat Launch Initiative}
 \nomenclature{AMSAT}{Amateur Radio in Space}
 
-SECTIONTAG
+SECTION_TAG
 
 \bibliography{SPEX50SAT}
 \onecolumn

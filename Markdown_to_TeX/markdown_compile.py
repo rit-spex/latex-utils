@@ -1,32 +1,30 @@
 """
 Author: Evan Putnam
-Description: This is a python file that converts basic markdown to the SPEX PDD.
+Description: This is a python file that converts basic markdown to a latex file based on a template.
 
-TODO: Have the option to easily define additional meta-data tags.
 TODO: Integrate some additional features.  See LatexMarkdownCompiler.compile() function.
-TODO: Add additional logging beyond print statements.
 
 The logic is not anything special and is just a state machine handling basic conditions.
-
-SPEX Members are free to improve upon it as they see fit.
+SPEX Members are free to improve upon it as they see fit with the pull request system on Github.
 """
 
 import os
 import sys
 import re
 import shutil
+import logging
 import argparse
 
-# Possible regex for removing comments.
-TEMPLATE_FILE = "spex_template.tex"
+#Possible regex for removing comments.
+TEMPLATE_FILE = ".\\Templates\\PDD_Template.tex"
 COMPILER = ".\\Compile_Scripts\\MikTexCompiler.bat"
 
+#Name of log file
+LOG_FILE_NAME = "markdown_compile.log"
+
 #Template tags that exist inside the SPEX document.
-TITLE = "TITLETAG"
-STUDENT_NAMES = "STUDENTTAG"
-STUDENT_EMAILS = "EMAILTAG"
-ABSTRACT = "ABSTRACTTAG"
-SECTION_START = "SECTIONTAG"
+ABSTRACT = "ABSTRACT_TAG"
+SECTION_START = "SECTION_TAG"
 
 
 
@@ -87,8 +85,10 @@ class LatexMarkdownCompiler:
 
         #Comments are malformed so this is an error.
         if start_comment == True or comment_balance != 0:
-            print("***** ERROR: Malformed comments.  Can not parse the document. Please fix you comments to have a starting and ending tag." )
-            print("In addition do NOT have <!--- or ---> anywhere in your markdown document that you do not expect a comment.")
+            error_message = "Malformed comments.  Can not parse the document. Please fix you comments to have a starting and ending tag.\n" 
+            error_message += "In addition do NOT have <!--- or ---> anywhere in your markdown document that you do not expect a comment."
+            print("***** ERROR: " + error_message)
+            logging.error(error_message)
             sys.exit(1)
 
         #Return markdown document text without markdown <!--- ---> comments
@@ -106,15 +106,12 @@ class LatexMarkdownCompiler:
         #Start metadata search bool
         start_metadata = False
 
-        #Items to find from metadata in test.md
-        title = None
-        authors = None
-        emails = None
-
         #Section storage
         current_section = None
         current_sub_section = None
         section_dict = {}
+
+        tag_key_values = {}
 
         for line in markdown_file_str:
             #Start looking for metadata
@@ -128,24 +125,15 @@ class LatexMarkdownCompiler:
             #If we are looking for metadata
             elif start_metadata:
                 #Search for specific tags.
-                if "title:" in line:
-                    temp = "title:"
-                    title = line[line.find(temp) + len(temp):].strip()
-                elif "authors:" in line:
-                    temp = "authors:"
-                    authors = line[line.find(temp) + len(temp):].strip()
-                elif "emails:" in line:
-                    temp = "emails:"
-                    emails = line[line.find(temp) + len(temp):].strip()
+                line_parts = line.split(":")
+                tag_key = line_parts[0].strip()
+                tag_value = ":".join(line_parts[1:]).strip()
+                tag_key_values[tag_key] = tag_value
+
             #Look at subsections
             else:
-                #If we can't identify metadata then error
-                if line.startswith("#") and title == None:
-                    print("***** ERROR: Malformed metadata.  Please include a title, authors, and emails" )
-                    print(line)
-                    sys.exit(1)
                 #If start of section
-                elif line.startswith("#") and not line.startswith("##"):
+                if line.startswith("#") and not line.startswith("##"):
                     current_sub_section = None
                     temp = "#"
                     current_section = line[line.find(temp) + len(temp):].strip()
@@ -157,6 +145,7 @@ class LatexMarkdownCompiler:
                     if current_section == None:
                         print("***** Error: Subsection before section")
                         print(line)
+                        logging.error("Subsection before section: "+line)
                         sys.exit(1)
                     #Else handle section
                     else:
@@ -180,16 +169,14 @@ class LatexMarkdownCompiler:
                     elif line.strip() != "":
                         print("***** Error: Malformed sections/subsections")
                         print(line)
+                        logging.error("Malformed sections/subsections")
                         sys.exit(1)
         if self.verbose:      
             #Print out wonderful information.
-            print(title)
-            print(authors)
-            print(emails)
             print(section_dict)
 
         #Items that populate the spex_template.tex file
-        return title, authors, emails, section_dict
+        return tag_key_values, section_dict
 
     #---------------------------------------------------------------------
     # Converts the markdown items to latex format and puts it into
@@ -200,12 +187,15 @@ class LatexMarkdownCompiler:
         #If no sections are detected then errors out.
         if len(sections) == 0:
             print("***** Error: No sections detected in your markdown file.")
+            logging.error("No sections detected in your markdown file.")
             sys.exit(1)
         
         #If no abstract it errors out.  Shame on you...
         if "ABSTRACT" not in sections:
-            print("***** Error: No abstract in markdown.  Make a section titled #ABSTRACT")
-            sys.exit(1)
+            print("----- Warning: No abstract in markdown.  Most documents should have an abstract.")
+            logging.warning("No abstract in markdown.  Most documents should have an abstract.")
+
+        logging.debug(str(sections))
         if self.verbose:
             print(sections)
 
@@ -214,11 +204,12 @@ class LatexMarkdownCompiler:
         sections_str = ""
 
         #Get abstract data
-        for txt in sections["ABSTRACT"]["text"].split("\n"):
-            if txt.strip() == "":
-                continue
-            abstract_str += txt
-            abstract_str += (r"\\") + ("\n")
+        if "ABSTRACT" in sections:
+            for txt in sections["ABSTRACT"]["text"].split("\n"):
+                if txt.strip() == "":
+                    continue
+                abstract_str += txt
+                abstract_str += (r"\\") + ("\n")
 
         #Get section data
         for section in sections:
@@ -241,7 +232,9 @@ class LatexMarkdownCompiler:
                             continue
                         sections_str += txt
                         sections_str += (r"\\") + ("\n")
-                
+
+        logging.debug(str(abstract_str))
+        logging.debug(str(sections_str))
         if self.verbose:
             #Prints out latex formatted strings.
             print(abstract_str)
@@ -262,13 +255,12 @@ class LatexMarkdownCompiler:
     # Somewhere between or after the self._parse() call and the self._latex_string call 
     # there is opportunity to post process more if need be.  The following features would be good.
     #   - TODO: Include bold and italics
-    #   - TODO: Include basic bullited lists.
-    #   - TODO: Image syntax of some sort.
-    # For now users can default back to LaTeX tho and code has been provided in test.md for it.
+    #   - TODO: Include basic bulleted lists.
+    # For now users can default back to LaTeX though and code has been provided in test.md for it.
     #---------------------------------------------------------------------
     def convert(self):
         #Get information needed for document
-        title, authors, emails, sections = self._parse()
+        tag_key_values, sections = self._parse()
         
         #Get latex formatted abstract and sections/subsections
         abstract_latex, sections_latex = self._latex_string(sections)
@@ -279,13 +271,16 @@ class LatexMarkdownCompiler:
             tex_contents = fle.read()
         
         #Replace template tags with relevant data.
-        tex_contents = tex_contents.replace(TITLE, title)
-        tex_contents = tex_contents.replace(TITLE, title)
-        tex_contents = tex_contents.replace(STUDENT_NAMES, authors)
-        tex_contents = tex_contents.replace(STUDENT_EMAILS, emails)
-        tex_contents = tex_contents.replace(ABSTRACT, abstract_latex)
+        if abstract_latex != "":
+            tex_contents = tex_contents.replace(ABSTRACT, abstract_latex)
         tex_contents = tex_contents.replace(SECTION_START, sections_latex)
 
+        for key in tag_key_values:
+            times_to_replace = tex_contents.count(key)
+            for i in range(0, times_to_replace):
+                tex_contents = tex_contents.replace(key, tag_key_values[key])
+
+        logging.debug(tex_contents)
         if self.verbose:
             #Output complete LaTeX document.
             print("")
@@ -308,15 +303,22 @@ class LatexMarkdownCompiler:
 
     def compile(self, tex_path):
         #Compile the script.  System call is bat script, path of file, path of
-        #folder that file exists in.
-        os.system("%(compiler)s %(tex_dir)s %(tex_file)s" % {
-            "compiler": self.bat_script,
-            "tex_dir": self.name,
-            "tex_file": ".\\" + tex_path
-        })
+        #folder that file exists in.  It compiles twice to fix fairly common issues with broken references in .aux file.
+        for i in range(0, 2):
+            os.system("%(compiler)s %(tex_dir)s %(tex_file)s" % {
+                "compiler": self.bat_script,
+                "tex_dir": self.name,
+                "tex_file": ".\\" + tex_path
+            })
+        
 
 
 if __name__ == "__main__":
+    #Initialize logging.
+    if os.path.exists(LOG_FILE_NAME):
+        os.remove(LOG_FILE_NAME)
+    logging.basicConfig(filename=LOG_FILE_NAME)
+    #Create the parser.
     parser = argparse.ArgumentParser(
         description="converts basic markdown to TeX and PDF")
     parser.add_argument(
