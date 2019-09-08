@@ -194,8 +194,9 @@ class LatexMarkdownCompiler:
         if "ABSTRACT" not in sections:
             print("----- Warning: No abstract in markdown.  Most documents should have an abstract.")
             logging.warning("No abstract in markdown.  Most documents should have an abstract.")
+
+        logging.debug(str(sections))
         if self.verbose:
-            logging.debug(str(sections))
             print(sections)
 
         #Storage for latex formatted strings for abstract and sections.
@@ -231,14 +232,14 @@ class LatexMarkdownCompiler:
                             continue
                         sections_str += txt
                         sections_str += (r"\\") + ("\n")
-                
+
+        logging.debug(str(abstract_str))
+        logging.debug(str(sections_str))
         if self.verbose:
             #Prints out latex formatted strings.
             print(abstract_str)
             print("")
             print(sections_str)
-            logging.debug(str(abstract_str))
-            logging.debug(str(sections_str))
 
         return abstract_str, sections_str
         
@@ -254,7 +255,7 @@ class LatexMarkdownCompiler:
     # Somewhere between or after the self._parse() call and the self._latex_string call 
     # there is opportunity to post process more if need be.  The following features would be good.
     #   - TODO: Include bold and italics
-    #   - TODO: Include basic bullited lists.
+    #   - TODO: Include basic bulleted lists.
     # For now users can default back to LaTeX though and code has been provided in test.md for it.
     #---------------------------------------------------------------------
     def convert(self):
@@ -279,11 +280,11 @@ class LatexMarkdownCompiler:
             for i in range(0, times_to_replace):
                 tex_contents = tex_contents.replace(key, tag_key_values[key])
 
+        logging.debug(tex_contents)
         if self.verbose:
             #Output complete LaTeX document.
             print("")
             print(tex_contents)
-            logging.debug(tex_contents)
         
  
         #Get rid of directory so we can regenerate the new .tex file.
