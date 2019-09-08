@@ -16,7 +16,7 @@ import logging
 import argparse
 
 #Possible regex for removing comments.
-TEMPLATE_FILE = "Templates\\PDD_Template.tex"
+TEMPLATE_FILE = ".\\Templates\\PDD_Template.tex"
 COMPILER = ".\\Compile_Scripts\\MikTexCompiler.bat"
 
 #Name of log file
